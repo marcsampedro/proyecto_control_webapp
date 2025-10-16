@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- TARJETAS RESUMEN (5 columnas, diseño mejorado) -->
+<style>
+  .metric-card {
+    transition: all 0.2s ease-in-out;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background: #fff;
+  }
+  .metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  .metric-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+  }
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  .metric-positive { color: #198754; }
+  .metric-negative { color: #dc3545; }
+  .metric-neutral { color: #212529; }
+</style>
+
+<div class="row g-3 mb-4 row-cols-1 row-cols-md-5 text-center">
+
+  <!-- 1️⃣ Total Forecast -->
+  <div class="col">
+    <div class="metric-card p-3 h-100">
+      <div class="metric-label">Total Forecast</div>
+      <p class="metric-value metric-neutral">
+        {{ "{:,.2f}".format(total_forecast or 0)
+           .replace(",", "X").replace(".", ",").replace("X", ".") }} €
+      </p>
+    </div>
+  </div>
+
+  <!-- 2️⃣ Total Facturado -->
+  <div class="col">
+    <div class="metric-card p-3 h-100">
+      <div class="metric-label">Total Facturado</div>
+      <p class="metric-value metric-neutral">
+        {{ "{:,.2f}".format(total_facturado or 0)
+           .replace(",", "X").replace(".", ",").replace("X", ".") }} €
+      </p>
+    </div>
+  </div>
+
+  <!-- 3️⃣ WIP -->
+  <div class="col">
+    <div class="metric-card p-3 h-100 border border-2 border-info">
+      <div class="metric-label">WIP (Forecast - Facturado)</div>
+      {% set wip_color = 'metric-positive' if (wip or 0) > 0 else 'metric-negative' if (wip or 0) < 0 else 'metric-neutral' %}
+      <p class="metric-value {{ wip_color }}">
+        {{ "{:,.2f}".format(wip or 0)
+           .replace(",", "X").replace(".", ",").replace("X", ".") }} €
+      </p>
+    </div>
+  </div>
+
+  <!-- 4️⃣ Pendiente -->
+  <div class="col">
+    <div class="metric-card p-3 h-100">
+      <div class="metric-label">Pendiente (incurrir + pdte factura)</div>
+      <p class="metric-value metric-neutral">
+        {{ "{:,.2f}".format(total_pendiente or 0)
+           .replace(",", "X").replace(".", ",").replace("X", ".") }} €
+      </p>
+    </div>
+  </div>
+
+  <!-- 5️⃣ WIP Calculado -->
+  <div class="col">
+    <div class="metric-card p-3 h-100 border border-2 border-primary">
+      <div class="metric-label">WIP Calculado (WIP - Pendiente)</div>
+      {% set wipc_color = 'metric-positive' if (wip_calculado or 0) > 0 else 'metric-negative' if (wip_calculado or 0) < 0 else 'metric-neutral' %}
+      <p class="metric-value {{ wipc_color }}">
+        {{ "{:,.2f}".format(wip_calculado or 0)
+           .replace(",", "X").replace(".", ",").replace("X", ".") }} €
+      </p>
+    </div>
+  </div>
+
+</div>
+
+
+<form method="get" class="row g-3 align-items-end mb-4">
+  <div class="col-auto">
+    <label for="desde" class="form-label mb-0">Desde</label>
+    <input type="month" id="desde" name="desde" class="form-control" value="{{ desde }}">
+  </div>
+  <div class="col-auto">
+    <label for="hasta" class="form-label mb-0">Hasta</label>
+    <input type="month" id="hasta" name="hasta" class="form-control" value="{{ hasta }}">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-primary">Filtrar</button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Reset</a>
+  </div>
+</form>
+<div class="card shadow-sm mb-4"><div class="card-body"><h5 class="card-title">Serie Mensual</h5><canvas id="serieChart" height="120"></canvas></div></div>
+<div class="card shadow-sm"><div class="card-body"><h5 class="card-title">Evolución de la bolsa mensual</h5><canvas id="evoChart" height="120"></canvas></div></div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const serie = {{ serie|tojson }};
+    const evo = {{ evo_serie|tojson }};
+    renderDashboardCharts(serie, evo);
+  });
+</script>
+
+{% endblock %}

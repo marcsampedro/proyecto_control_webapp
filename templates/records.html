@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Control Mensual</h4></div>
+<div class="card shadow-sm mb-4"><div class="card-body">
+  <form class="row g-2" method="post" action="{{ url_for('records_new') }}">
+    <div class="col-6 col-md-2"><label class="form-label">Mes (YYYY-MM)</label><input required name="mes" type="month" class="form-control"></div>
+    <div class="col-6 col-md-2"><label class="form-label">Forecast (1)</label><input name="forecast_1" type="number" step="0.01" class="form-control"></div>
+    <div class="col-6 col-md-2"><label class="form-label">Facturado (2)</label><input name="facturado_2" type="number" step="0.01" class="form-control"></div>
+    <div class="col-6 col-md-2"><label class="form-label">Pdt incurrir (3)</label><input name="pdt_incurrir_3" type="number" step="0.01" class="form-control"></div>
+    <div class="col-6 col-md-2"><label class="form-label">Inc. pdte factura (4)</label><input name="inc_pdte_factura_4" type="number" step="0.01" class="form-control"></div>
+    <div class="col-6 col-md-2"><label class="form-label">Ajuste FC</label><input name="ajuste_fc" type="number" step="0.01" class="form-control"></div>
+    <div class="col-6 col-md-2"><label class="form-label">New Forecast</label><input name="new_forecast" type="number" step="0.01" class="form-control"></div>
+    <div class="col-6 col-md-2"><label class="form-label">real + deuda pdte</label><input name="real_mas_deuda_pend" type="number" step="0.01" class="form-control"></div>
+    <div class="col-12"><label class="form-label">Comentarios</label><input name="comentarios" type="text" class="form-control"></div>
+    <div class="col-12"><button class="btn btn-primary">Añadir mes</button></div>
+  </form>
+</div></div>
+
+<div class="table-responsive"><table class="table table-striped align-middle">
+  <thead class="table-light">
+    <tr>
+      <th>Mes</th><th>Forecast (1)</th><th>Facturado (2)</th><th>Pdt incurrir (3)</th><th>Inc. pdte factura (4)</th>
+      <th>Restante ((2+3+4)-1)</th><th>Ajuste FC</th><th>New Forecast</th><th>real + deuda pdte</th><th>Comentarios</th><th style="width:160px;"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <form method="post" action="{{ url_for('records_edit', rid=r.id) }}">
+      <td><input name="mes" type="month" value="{{ r.mes.strftime('%Y-%m') }}" class="form-control form-control-sm"></td>
+      <td><input name="forecast_1" type="number" step="0.01" value="{{ r.forecast_1 }}" class="form-control form-control-sm"></td>
+      <td><input name="facturado_2" type="number" step="0.01" value="{{ r.facturado_2 }}" class="form-control form-control-sm"></td>
+      <td><input name="pdt_incurrir_3" type="number" step="0.01" value="{{ r.pdt_incurrir_3 }}" class="form-control form-control-sm"></td>
+      <td><input name="inc_pdte_factura_4" type="number" step="0.01" value="{{ r.inc_pdte_factura_4 }}" class="form-control form-control-sm"></td>
+      <td><input disabled value="{{ '{:,.2f}'.format(r.restante_calc) }}" class="form-control form-control-sm"></td>
+      <td><input name="ajuste_fc" type="number" step="0.01" value="{{ r.ajuste_fc }}" class="form-control form-control-sm"></td>
+      <td><input name="new_forecast" type="number" step="0.01" value="{{ r.new_forecast }}" class="form-control form-control-sm"></td>
+      <td><input name="real_mas_deuda_pend" type="number" step="0.01" value="{{ r.real_mas_deuda_pend }}" class="form-control form-control-sm"></td>
+      <td><input name="comentarios" value="{{ r.comentarios or '' }}" class="form-control form-control-sm"></td>
+      <td class="text-nowrap"><button class="btn btn-sm btn-success">Guardar</button></form>
+        <form class="d-inline" method="post" action="{{ url_for('records_delete', rid=r.id) }}"><button class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar?')">Eliminar</button></form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}
