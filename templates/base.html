@@ -8,12 +8,30 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   </head>
   <body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-      <div class="container">
-        <a class="navbar-brand" href="{{ url_for('dashboard') }}">📊 Control Económico</a>
-        <div>
-          <a class="btn btn-outline-light me-2" href="{{ url_for('records_list') }}">Mensual</a>
-          <a class="btn btn-outline-light" href="{{ url_for('evolucion_list') }}">Evolución</a>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+      <div class="container d-flex justify-content-between align-items-center">
+
+        <!-- Logo y título -->
+        <div class="d-flex align-items-center">
+          <a href="{{ url_for('dashboard') }}" class="navbar-brand d-flex align-items-center">
+            <img src="{{ url_for('static', filename='img/nttdata_logo.png') }}"
+                alt="NTT DATA"
+                height="40"
+                class="me-2">
+            <span class="fw-bold ms-2 text-light">Control Económico</span>
+          </a>
+        </div>
+
+        <!-- Botones de navegación -->
+        <div class="d-flex align-items-center">
+          <a class="btn btn-outline-light" href="{{ url_for('dashboard') }}">Dashboard</a>
+          &nbsp;
+          <a class="btn btn-outline-light me-2" href="{{ url_for('records_list') }}">Control Mensual</a>
+          
+          <a class="btn btn-outline-light me-2" href="{{ url_for('evolucion_list') }}">Evolución finanzas</a>
+
+          <a class="btn btn-outline-light me-2" href="{{ url_for('prepagado_list') }}">Prepagado</a>
+          
         </div>
       </div>
     </nav>

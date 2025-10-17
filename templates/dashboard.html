@@ -27,6 +27,14 @@
   .metric-neutral { color: #212529; }
 </style>
 
+<div class="mb-4 text-end">
+  <a href="{{ url_for('generar_informe_pdf', desde=desde, hasta=hasta) }}"
+     class="btn btn-outline-danger" target="_blank">
+    🧾 Generar Informe PDF
+  </a>
+</div>
+
+
 <div class="row g-3 mb-4 row-cols-1 row-cols-md-5 text-center">
 
   <!-- 1️⃣ Total Forecast -->
@@ -34,8 +42,7 @@
     <div class="metric-card p-3 h-100">
       <div class="metric-label">Total Forecast</div>
       <p class="metric-value metric-neutral">
-        {{ "{:,.2f}".format(total_forecast or 0)
-           .replace(",", "X").replace(".", ",").replace("X", ".") }} €
+        {{ total_forecast|euro|safe }}
       </p>
     </div>
   </div>
@@ -45,8 +52,7 @@
     <div class="metric-card p-3 h-100">
       <div class="metric-label">Total Facturado</div>
       <p class="metric-value metric-neutral">
-        {{ "{:,.2f}".format(total_facturado or 0)
-           .replace(",", "X").replace(".", ",").replace("X", ".") }} €
+        {{ total_facturado|euro|safe }}
       </p>
     </div>
   </div>
@@ -57,8 +63,7 @@
       <div class="metric-label">WIP (Forecast - Facturado)</div>
       {% set wip_color = 'metric-positive' if (wip or 0) > 0 else 'metric-negative' if (wip or 0) < 0 else 'metric-neutral' %}
       <p class="metric-value {{ wip_color }}">
-        {{ "{:,.2f}".format(wip or 0)
-           .replace(",", "X").replace(".", ",").replace("X", ".") }} €
+        {{ wip|euro|safe }}
       </p>
     </div>
   </div>
@@ -68,8 +73,7 @@
     <div class="metric-card p-3 h-100">
       <div class="metric-label">Pendiente (incurrir + pdte factura)</div>
       <p class="metric-value metric-neutral">
-        {{ "{:,.2f}".format(total_pendiente or 0)
-           .replace(",", "X").replace(".", ",").replace("X", ".") }} €
+        {{ total_pendiente|euro|safe }}
       </p>
     </div>
   </div>
@@ -80,8 +84,7 @@
       <div class="metric-label">WIP Calculado (WIP - Pendiente)</div>
       {% set wipc_color = 'metric-positive' if (wip_calculado or 0) > 0 else 'metric-negative' if (wip_calculado or 0) < 0 else 'metric-neutral' %}
       <p class="metric-value {{ wipc_color }}">
-        {{ "{:,.2f}".format(wip_calculado or 0)
-           .replace(",", "X").replace(".", ",").replace("X", ".") }} €
+        {{ wip_calculado|euro|safe }}
       </p>
     </div>
   </div>

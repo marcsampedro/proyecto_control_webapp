@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h4 class="mb-3">Control del Prepagado</h4>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+
+<!-- Formulario para añadir movimientos -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('prepagado_new') }}" class="row g-2 align-items-end">
+      <div class="col-md-2">
+        <label class="form-label">Bolsa</label>
+        <select name="bolsa" class="form-select" required>
+          <option value="">-- Selecciona --</option>
+          <option>Samsung</option>
+          <option>New App</option>
+          <option>Bolsa General</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Mes</label>
+        <input type="text" name="mes" class="form-control" placeholder="ej. mayo">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Concepto</label>
+        <input type="text" name="concepto" class="form-control" placeholder="Consumo, Prefacturado, etc.">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Tipo</label>
+        <select name="tipo" class="form-select" required>
+          <option value="saldo">Saldo Inicial</option>
+          <option value="consumo">Consumo</option>
+          <option value="prefacturado">Prefacturado</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Importe (€)</label>
+        <input type="number" step="0.01" name="importe" class="form-control" required>
+      </div>
+      <div class="col-md-1 d-grid">
+        <button class="btn btn-primary">➕ Añadir</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Tarjeta global de total prepagado -->
+<div class="row mb-4">
+  <div class="col-md-4 col-lg-3">
+    <div class="card shadow-sm border-primary">
+      <div class="card-body text-center">
+        <h6 class="text-muted mb-2">💰 Total General del Prepagado</h6>
+        <h4 class="{% if total_general < 0 %}text-danger{% else %}text-dark{% endif %}">
+          {{ total_general|euro|safe }}
+        </h4>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Tarjetas resumen -->
+<div class="row g-3 mb-4 row-cols-1 row-cols-md-3 text-center">
+  {% for bolsa, data in resumen.items() %}
+  <div class="col">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">{{ bolsa }}</h5>
+        <p class="mb-1 text-muted">Saldo inicial: {{ data.saldo|euro|safe }}</p>
+        <p class="mb-1 text-muted">Consumido: {{ data.consumo|euro|safe }}</p>
+        <p class="mb-1 text-muted">Prefacturado: {{ data.prefacturado|euro|safe }}</p>
+        <p class="fw-bold">Restante: {{ data.restante|euro|safe }}</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Tabla de registros -->
+<!-- Tabla de registros editable -->
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h6 class="card-title mb-3">Detalle de movimientos</h6>
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Bolsa</th>
+            <th>Mes</th>
+            <th>Concepto</th>
+            <th>Tipo</th>
+            <th>Importe</th>
+            <th style="width: 180px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in registros %}
+          <tr>
+            <form method="post" action="{{ url_for('prepagado_edit', rid=r.id) }}">
+              <td>
+                <input name="bolsa" value="{{ r.bolsa }}" class="form-control form-control-sm">
+              </td>
+              <td>
+                <input name="mes" value="{{ r.mes or '' }}" class="form-control form-control-sm">
+              </td>
+              <td>
+                <input name="concepto" value="{{ r.concepto or '' }}" class="form-control form-control-sm">
+              </td>
+              <td>
+                <select name="tipo" class="form-select form-select-sm">
+                  <option value="saldo" {% if r.tipo=='saldo' %}selected{% endif %}>Saldo Inicial</option>
+                  <option value="consumo" {% if r.tipo=='consumo' %}selected{% endif %}>Consumo</option>
+                  <option value="prefacturado" {% if r.tipo=='prefacturado' %}selected{% endif %}>Prefacturado</option>
+                </select>
+              </td>
+              <td>
+                <input type="number" step="0.01" name="importe" value="{{ r.importe }}" class="form-control form-control-sm text-end {% if r.importe < 0 %}text-danger{% endif %}">
+              </td>
+              <td class="text-nowrap">
+                <button class="btn btn-sm btn-success me-1">💾</button>
+              </form>
+              <form method="post" action="{{ url_for('prepagado_delete', rid=r.id) }}" class="d-inline">
+                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar este registro?')">🗑️</button>
+              </form>
+              </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+
+
