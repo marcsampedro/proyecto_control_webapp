@@ -69,7 +69,6 @@ def dashboard():
     desde_str = request.args.get("desde")
     hasta_str = request.args.get("hasta")
 
-    # Inicializar por defecto en abril 2025
     if not desde_str:
         desde_str = "2025-04"
 
@@ -84,7 +83,7 @@ def dashboard():
     desde = parse_month_param(desde_str)
     hasta = parse_month_param(hasta_str)
 
-    # Query base
+    # --- Datos base del dashboard ---
     query = MonthlyRecord.query
     query_evo = EvolucionBolsa.query
 
@@ -95,14 +94,42 @@ def dashboard():
         query = query.filter(MonthlyRecord.mes <= hasta)
         query_evo = query_evo.filter(EvolucionBolsa.mes <= hasta)
 
-    # Datos para tarjetas
+    # Total histórico (todos los registros)
+    
     total_forecast = query.with_entities(func.coalesce(func.sum(MonthlyRecord.forecast_1), 0)).scalar()
     total_facturado = query.with_entities(func.coalesce(func.sum(MonthlyRecord.facturado_2), 0)).scalar()
     total_pendiente = query.with_entities(func.coalesce(func.sum(MonthlyRecord.pdt_incurrir_3 + MonthlyRecord.inc_pdte_factura_4), 0)).scalar()
-    wip = (total_forecast or 0) - (total_facturado or 0)
-    wip_calculado = wip - (total_pendiente or 0)
 
-    # Serie por mes
+    # --- Cálculo del WIP base ---
+    wip = (total_forecast or 0) - (total_facturado or 0)
+
+    # --- Incorporar el total_general del Prepagado ---
+    try:
+        registros_prepagado = Prepagado.query.all()
+        resumen = {}
+        for r in registros_prepagado:
+            resumen.setdefault(r.bolsa, {"saldo": 0, "consumo": 0, "prefacturado": 0})
+            if r.tipo == "saldo":
+                resumen[r.bolsa]["saldo"] += float(r.importe or 0)
+            elif r.tipo == "consumo":
+                resumen[r.bolsa]["consumo"] += float(r.importe or 0)
+            elif r.tipo == "prefacturado":
+                resumen[r.bolsa]["prefacturado"] += float(r.importe or 0)
+        for bolsa, datos in resumen.items():
+            datos["restante"] = datos["saldo"] - datos["consumo"] - datos["prefacturado"]
+        total_general_prepagado = sum(datos["restante"] for datos in resumen.values())
+    except Exception:
+        total_general_prepagado = 0
+
+    # --- WIP total combinado ---
+    wip_total = float(wip or 0) + float(total_general_prepagado or 0)
+
+    # --- WIP calculado ---
+    wip_calculado = wip_total - float(total_pendiente or 0)
+
+    print("Total Forecast:", total_forecast, "Total Facturado:", total_facturado)
+
+    # --- Datos para las gráficas ---
     rows = query.order_by(MonthlyRecord.mes).all()
     serie = [{
         "mes": r.mes.strftime("%Y-%m"),
@@ -115,7 +142,6 @@ def dashboard():
         "real_mas_deuda_pend": float(r.real_mas_deuda_pend or 0),
     } for r in rows]
 
-    # Evolución bolsa
     evo = query_evo.order_by(EvolucionBolsa.mes).all()
     evo_serie = [{
         "mes": r.mes.strftime("%Y-%m"),
@@ -132,8 +158,9 @@ def dashboard():
         evo_serie=evo_serie,
         desde=desde_str or "",
         hasta=hasta_str or "",
-        wip=wip,
-        wip_calculado=wip_calculado
+        wip=wip,  # 👈 se usa el WIP con prepagado incluido
+        wip_calculado=wip_calculado,
+        total_general_prepagado=total_general_prepagado
     )
 
 
@@ -413,11 +440,11 @@ class Prepagado(db.Model):
     importe = db.Column(db.Numeric(14, 2), default=0)
     tipo = db.Column(db.String(20), nullable=False, default="consumo")  # consumo / prefacturado / saldo
 
+# --- CRUD Prepagado ---
 @app.route("/prepagado")
 def prepagado_list():
     registros = Prepagado.query.order_by(Prepagado.bolsa, Prepagado.id).all()
 
-    # Agrupar por bolsa
     resumen = {}
     for r in registros:
         resumen.setdefault(r.bolsa, {"saldo": 0, "consumo": 0, "prefacturado": 0})
@@ -431,16 +458,16 @@ def prepagado_list():
     for bolsa, datos in resumen.items():
         datos["restante"] = datos["saldo"] - datos["consumo"] - datos["prefacturado"]
 
-    # ✅ Nuevo cálculo total general
-    total_general = sum(float(r.importe or 0) for r in registros)
+    # Cálculo total general
+    total_general = sum(datos["restante"] for datos in resumen.values())
 
-    # ✅ Asegúrate de incluirlo aquí
     return render_template(
         "prepagado.html",
         registros=registros,
         resumen=resumen,
         total_general=total_general
     )
+
 
 @app.route("/prepagado/new", methods=["POST"])
 def prepagado_new():

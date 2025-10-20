@@ -39,7 +39,7 @@
 
   <!-- 1️⃣ Total Forecast -->
   <div class="col">
-    <div class="metric-card p-3 h-100">
+    <div class="metric-card p-3 h-100 border">
       <div class="metric-label">Total Forecast</div>
       <p class="metric-value metric-neutral">
         {{ total_forecast|euro|safe }}
@@ -49,7 +49,7 @@
 
   <!-- 2️⃣ Total Facturado -->
   <div class="col">
-    <div class="metric-card p-3 h-100">
+    <div class="metric-card p-3 h-100 border">
       <div class="metric-label">Total Facturado</div>
       <p class="metric-value metric-neutral">
         {{ total_facturado|euro|safe }}
@@ -59,7 +59,7 @@
 
   <!-- 3️⃣ WIP -->
   <div class="col">
-    <div class="metric-card p-3 h-100 border border-2 border-info">
+    <div class="metric-card p-3 h-100 border">
       <div class="metric-label">WIP (Forecast - Facturado)</div>
       {% set wip_color = 'metric-positive' if (wip or 0) > 0 else 'metric-negative' if (wip or 0) < 0 else 'metric-neutral' %}
       <p class="metric-value {{ wip_color }}">
@@ -70,8 +70,8 @@
 
   <!-- 4️⃣ Pendiente -->
   <div class="col">
-    <div class="metric-card p-3 h-100">
-      <div class="metric-label">Pendiente (incurrir + pdte factura)</div>
+    <div class="metric-card p-3 h-100 border">
+      <div class="metric-label">Pendiente (incurrir + fra.)</div>
       <p class="metric-value metric-neutral">
         {{ total_pendiente|euro|safe }}
       </p>
@@ -79,15 +79,17 @@
   </div>
 
   <!-- 5️⃣ WIP Calculado -->
-  <div class="col">
-    <div class="metric-card p-3 h-100 border border-2 border-primary">
-      <div class="metric-label">WIP Calculado (WIP - Pendiente)</div>
-      {% set wipc_color = 'metric-positive' if (wip_calculado or 0) > 0 else 'metric-negative' if (wip_calculado or 0) < 0 else 'metric-neutral' %}
-      <p class="metric-value {{ wipc_color }}">
-        {{ wip_calculado|euro|safe }}
+<div class="col">
+  <div class="metric-card p-3 h-100 border">
+    <div class="card-body text-center">
+      <small class="text-muted">WIP + Prepagado</small>
+      <p class="metric-value metric-neutral">
+        <span >{{wip_calculado}}</span>
       </p>
+      <small class="text-muted">Inc. {{ total_general_prepagado|euro|safe }} de Prep.</small>
     </div>
   </div>
+</div>
 
 </div>
 
